@@ -6,5 +6,6 @@ Install script with the following features:
 - [ ] Full disk encryption
 - [ ] Offline installation
 - [ ] Post-install management
+- [ ] Regular readme.md file
 
 **Please, refrain from using this or any other script as a substitute for a proper learning curve.**
