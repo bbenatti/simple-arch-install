@@ -1,0 +1,25 @@
+#!/bin/bash
+
+pacman -Syu
+mkdir -p offline-repo
+cd offline-repo
+pacman -Sp $(cat ../base) | wget -nv -i-
+pacman -Sp $(cat ../pkg.list) | wget -nv -i-
+repo-add offline-repo.db.tar.gz *pkg.tar.xz
+
+cat >../pacman.conf <<EOL
+[options]
+CheckSpace
+
+Architecture = auto
+HoldPkg      = pacman glibc
+SigLevel     = Required DatabaseOptional
+
+LocalFileSigLevel = Optional
+
+[offline-repo]
+SigLevel = Never
+EOL
+
+echo "Server = file://$(pwd)" >> ../pacman.conf
+cd ..

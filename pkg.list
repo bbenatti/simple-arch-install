@@ -1,0 +1,12 @@
+i3
+terminator
+dhclient
+wpa_supplicant
+broadcom-wl-dkms
+alsa-utils
+xorg-xinit
+xorg-server
+xorg-setxkbmap
+xf86-video-intel
+xf86-input-evdev
+xf86-input-synaptics

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Configuração da zona
+ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
+hwclock --systohc --utc
+locale-gen
+
+# Criação de usuário
+useradd -m $USER_NAME
+echo ${DUMMY_PASS}\n${DUMMY_PASS} | passwd $USER_NAME
+
+# Instalação dos pacotes definidos em pkg.list
+pacman -Syu 
+pacman --noconfirm -S $(cat pkg.list)
+
+# Referencia o disco criptografado que será aberto no grub
+blkid | grep ${DEVICE}2 |  cut -d' ' -f2 | cut -d\" -f2 | sed -e 's/^/GRUB_CMDLINE_LINUX_DEFAULT="cryptdevice=UUID=/' - | sed -e 's/$/\:${ROOT_ALIAS} root=${ROOT_DEVICE}/' - >> /etc/default/grub
+
+# Instalação do grub
+mkinitcpio -p linux
+grub-install --recheck --no-floppy --force $DEVICE
+grub-mkconfig -o /boot/grub/grub.cfg
+exit

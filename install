@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# Carregamento de variáveis
+export DEVICE=$1
+export BOOT_SIZE=$2
+export ROOT_SIZE=$3
+
+export HOST_NAME="archlinux"
+export USER_NAME="joselito"
+export ROOT_ALIAS="r00t"
+export DUMMY_PASS="troque essa senha"
+
+export BOOT_DEVICE=${DEVICE}1
+export ROOT_DEVICE=/dev/mapper/${ROOT_ALIAS}
+
+# Formatação do disco
+( 
+	for i in \
+	"o" "n" "p" "1" "" +$BOOT_SIZE \
+	"y" "n" "p" "2" "" +$ROOT_SIZE \
+	"a" "1" "w"; do echo $i; done
+) | fdisk $DEVICE >/dev/null 2>&1
+
+# Root criptografado
+echo $DUMMY_PASS | cryptsetup luksFormat ${DEVICE}2
+echo $DUMMY_PASS | cryptsetup open ${DEVICE}2 $ROOT_ALIAS
+
+# Criação de sistema de arquivos
+mkfs.ext4 -F -q $BOOT_DEVICE >/dev/null 2>&1
+mkfs.ext4 -F -q $ROOT_DEVICE >/dev/null 2>&1
+
+# Pastas necessárias para a instalação
+mount $ROOT_DEVICE /mnt
+mkdir /mnt/boot
+mount $BOOT_DEVICE /mnt/boot
+
+# Instala o bendito
+#if [ -d "offline-repo" ]; then 
+	#pacstrap -C pacman.conf /mnt base
+#else
+	pacstrap /mnt base
+#fi
+
+# Criação de arquivos de configuração
+echo $HOST_NAME > /mnt/etc/hostname 
+genfstab -U -p /mnt > /mnt/etc/fstab
+cp pkg.list /mnt
+cp etc/* /mnt/etc
+
+# Execução do script pós-instalação
+arch-chroot /mnt ./post-install
+
+# Limpeza de arquivoss
+rm /mnt/post-install /mnt/pkg.list
+umount -R /mnt/
